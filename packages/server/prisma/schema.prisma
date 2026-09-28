@@ -1,0 +1,310 @@
+// EIGHTH AVITRONICS — Phase-1 SIMULATION data model.
+// SQLite is used as a zero-infrastructure relational store for the prototype.
+// Swap the datasource to Postgres/MySQL later without changing the app layer.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  displayName  String
+  passwordHash String
+  role         String // ADMIN | OPERATOR | VIEWER
+  createdAt    DateTime @default(now())
+
+  configurationChanges ConfigurationChange[]
+  alertReviews         Alert[]                @relation("AlertReviewedBy")
+}
+
+model Unit {
+  id        String   @id @default(uuid())
+  code      String   @unique // UNIT-01
+  name      String
+  status    String   @default("OFFLINE")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  directions Direction[]
+  antennas   Antenna[]
+  signals    Signal[]
+  tracks     Track[]
+  alerts     Alert[]
+  interactions Interaction[]
+  detections   Detection[]
+}
+
+model Layer {
+  id          String @id @default(uuid())
+  code        String @unique // LAYER_1_OMNI .. LAYER_4_NEARBY_ALTITUDE
+  name        String
+  sortOrder   Int
+  description String
+
+  antennas Antenna[]
+  signals  Signal[]
+}
+
+model Direction {
+  id             String   @id @default(uuid())
+  unitId         String
+  code           String // DIR-01..DIR-06
+  azimuthCenterDeg Float
+  sectorWidthDeg Float
+  rangeUnits     Float
+  createdAt      DateTime @default(now())
+
+  unit     Unit      @relation(fields: [unitId], references: [id])
+  antennas Antenna[]
+  signals  Signal[]
+  tracks   Track[]
+  alerts   Alert[]
+  interactions Interaction[]
+  detections   Detection[]
+
+  @@unique([unitId, code])
+}
+
+model Antenna {
+  id          String   @id @default(uuid())
+  unitId      String
+  directionId String? // null for the top omni transmitter
+  layerId     String
+  code        String // ANT-01..ANT-18, or ANT-OMNI
+  isOmni      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  unit      Unit       @relation(fields: [unitId], references: [id])
+  direction Direction? @relation(fields: [directionId], references: [id])
+  layer     Layer      @relation(fields: [layerId], references: [id])
+  signals   Signal[]
+  tracks    Track[]
+  interactions Interaction[]
+  detections   Detection[]
+
+  @@unique([unitId, code])
+}
+
+model Signal {
+  id          String   @id @default(uuid())
+  unitId      String
+  directionId String?
+  antennaId   String
+  layerId     String
+  frequencyHz Float
+  status      String   @default("IDLE")
+  enabled     Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  unit      Unit        @relation(fields: [unitId], references: [id])
+  direction Direction?  @relation(fields: [directionId], references: [id])
+  antenna   Antenna     @relation(fields: [antennaId], references: [id])
+  layer     Layer       @relation(fields: [layerId], references: [id])
+  events    SignalEvent[]
+  interactions Interaction[]
+}
+
+model SignalEvent {
+  id                   String   @id @default(uuid())
+  signalId             String
+  stage                String // IDLE, READY, TRANSMITTING, FIELD_ACTIVE, ...
+  timestamp            DateTime @default(now())
+  simulationSessionId  String?
+
+  signal Signal @relation(fields: [signalId], references: [id])
+}
+
+model ObjectProfile {
+  id                      String @id @default(uuid())
+  type                    String @unique
+  label                   String
+  minAltitudeUnits        Float
+  maxAltitudeUnits        Float
+  defaultSpeedUnitsPerSec Float
+  note                    String
+}
+
+model SimObject {
+  id                  String   @id @default(uuid())
+  type                String
+  label               String
+  spawnedAt           DateTime @default(now())
+  currentX            Float
+  currentY            Float
+  currentZ            Float
+  currentT            Float
+  headingDeg          Float
+  speedUnitsPerSec    Float
+  status              String   @default("ACTIVE") // ACTIVE | EXITED | REMOVED
+  simulationSessionId String?
+
+  tracks Track[]
+}
+
+model Track {
+  id                    String    @id @default(uuid())
+  code                  String    @unique // TRK-00001
+  objectId              String
+  unitId                String
+  directionId           String?
+  antennaId             String?
+  status                String    @default("DETECTED")
+  firstDetectedAt       DateTime  @default(now())
+  lastDetectedAt        DateTime  @default(now())
+  currentX              Float
+  currentY              Float
+  currentZ              Float
+  currentT              Float
+  estimatedSpeed        Float     @default(0)
+  estimatedDirectionDeg Float     @default(0)
+  detectionCount        Int       @default(0)
+  missedTicks           Int       @default(0)
+  lostTicks             Int       @default(0)
+  simulationSessionId   String?
+
+  object      SimObject     @relation(fields: [objectId], references: [id])
+  unit        Unit          @relation(fields: [unitId], references: [id])
+  direction   Direction?    @relation(fields: [directionId], references: [id])
+  antenna     Antenna?      @relation(fields: [antennaId], references: [id])
+  points      TrackPoint[]
+  detections  Detection[]
+  alerts      Alert[]
+}
+
+model TrackPoint {
+  id          String   @id @default(uuid())
+  trackId     String
+  x           Float
+  y           Float
+  z           Float
+  t           Float
+  estimatedX  Float
+  estimatedY  Float
+  estimatedZ  Float
+  recordedAt  DateTime @default(now())
+
+  track Track @relation(fields: [trackId], references: [id])
+}
+
+model Interaction {
+  id                  String   @id @default(uuid())
+  unitId              String
+  directionId         String
+  antennaId           String
+  signalId            String
+  objectId            String
+  x                   Float
+  y                   Float
+  z                   Float
+  t                   Float
+  timestamp           DateTime @default(now())
+  simulationSessionId String?
+
+  unit      Unit      @relation(fields: [unitId], references: [id])
+  direction Direction @relation(fields: [directionId], references: [id])
+  antenna   Antenna   @relation(fields: [antennaId], references: [id])
+  signal    Signal    @relation(fields: [signalId], references: [id])
+  detection Detection?
+}
+
+model Detection {
+  id                  String   @id @default(uuid())
+  interactionId       String   @unique
+  trackId             String
+  unitId              String
+  directionId         String
+  antennaId           String
+  timestamp           DateTime @default(now())
+  estimatedX          Float
+  estimatedY          Float
+  estimatedZ          Float
+  estimatedRangeUnits Float
+  echoDelayMs         Float
+  simulationSessionId String?
+
+  interaction Interaction @relation(fields: [interactionId], references: [id])
+  track       Track       @relation(fields: [trackId], references: [id])
+  unit        Unit        @relation(fields: [unitId], references: [id])
+  direction   Direction   @relation(fields: [directionId], references: [id])
+  antenna     Antenna     @relation(fields: [antennaId], references: [id])
+}
+
+model Alert {
+  id                  String    @id @default(uuid())
+  code                String    @unique // ALERT-0001
+  trackId             String
+  objectType          String
+  unitId              String
+  directionId         String?
+  x                   Float
+  y                   Float
+  z                   Float
+  t                   Float
+  severity            String
+  reason              String
+  status              String    @default("OPEN")
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  reviewedById        String?
+  simulationSessionId String?
+
+  track      Track      @relation(fields: [trackId], references: [id])
+  unit       Unit       @relation(fields: [unitId], references: [id])
+  direction  Direction? @relation(fields: [directionId], references: [id])
+  reviewedBy User?      @relation("AlertReviewedBy", fields: [reviewedById], references: [id])
+}
+
+model SimulationSession {
+  id               String    @id @default(uuid())
+  code             String    @unique // SIM-2026-001
+  state            String    @default("STOPPED")
+  speedMultiplier  Float     @default(1)
+  startedAt        DateTime  @default(now())
+  endedAt          DateTime?
+  configSnapshot   String // JSON
+}
+
+model ConfigurationChange {
+  id         String   @id @default(uuid())
+  userId     String?
+  userLabel  String
+  action     String
+  entityType String
+  entityId   String
+  oldValue   String?
+  newValue   String?
+  timestamp  DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id])
+}
+
+model SystemEvent {
+  id                  String   @id @default(uuid())
+  eventType           String
+  timestamp           DateTime @default(now())
+  unitId              String?
+  signalId            String?
+  trackId             String?
+  objectId            String?
+  directionId         String?
+  antennaId           String?
+  alertId             String?
+  simulationSessionId String?
+  message             String
+  payload             String // JSON
+}
+
+model SimulationParameter {
+  id          String   @id @default(uuid())
+  key         String   @unique
+  value       String // JSON
+  description String
+  updatedAt   DateTime @updatedAt
+}

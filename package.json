@@ -1,0 +1,22 @@
+{
+  "name": "eighth-avitronics",
+  "private": true,
+  "version": "0.1.0",
+  "description": "EIGHTH AVITRONICS - conceptual radar/avionics monitoring SIMULATION platform (Phase-1 prototype, not for operational use)",
+  "workspaces": [
+    "packages/shared",
+    "packages/server",
+    "packages/web"
+  ],
+  "scripts": {
+    "dev:server": "npm run dev --workspace=packages/server",
+    "dev:web": "npm run dev --workspace=packages/web",
+    "build": "npm run build --workspace=packages/shared && npm run build --workspace=packages/server && npm run build --workspace=packages/web",
+    "test": "npm run test --workspace=packages/server",
+    "db:migrate": "npm run db:migrate --workspace=packages/server",
+    "db:seed": "npm run db:seed --workspace=packages/server"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
