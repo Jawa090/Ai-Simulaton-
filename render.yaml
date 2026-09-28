@@ -1,0 +1,22 @@
+# Render Blueprint for the backend (Express API + simulation engine + WebSocket).
+# Vercel cannot host this part: it needs a long-running process and WebSockets.
+services:
+  - type: web
+    name: avitronics-backend
+    runtime: node
+    plan: free
+    buildCommand: npm install && npm run build --workspace=backend
+    startCommand: npm run start:prod --workspace=backend
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+      - key: DATABASE_URL
+        value: file:./dev.db
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 12h
+      # Your Vercel URL, e.g. https://ai-simulaton.vercel.app (comma-separate several)
+      - key: CORS_ORIGIN
+        sync: false

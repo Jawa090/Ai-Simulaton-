@@ -96,6 +96,35 @@ OPERATOR or ADMIN session). This automatically:
 You can also use the manual controls: START/PAUSE/RESUME/RESET, a speed
 multiplier (0.5×–10×), and SPAWN OBJECT to introduce your own object type.
 
+## Deployment
+
+The two halves deploy to different hosts:
+
+| Part | Host | Why |
+|------|------|-----|
+| `frontend/` | Vercel | Static React build |
+| `backend/` | Render (or Railway / Fly.io) | Needs a long-running process and WebSockets, which Vercel does not support |
+
+### 1. Backend on Render
+
+1. In Render choose **New → Blueprint** and select this repo. It reads `render.yaml`.
+2. When asked for `CORS_ORIGIN`, enter your Vercel URL (e.g. `https://your-app.vercel.app`).
+   Several origins can be comma-separated.
+3. Deploy, then check `https://<your-backend>.onrender.com/api/health` returns `{"status":"ok"}`.
+
+On start the backend creates the SQLite schema and seeds UNIT-01 + demo users
+(`npm run start:prod`). On Render's free plan the disk is not persistent, so the
+database resets on every deploy/restart — attach a disk or move to Postgres for
+lasting data.
+
+### 2. Frontend on Vercel
+
+1. Import the repo in Vercel. Leave **Root Directory** empty (repo root) — `vercel.json`
+   already sets the build command and output folder.
+2. Add the environment variable `VITE_API_URL` = your backend URL
+   (e.g. `https://<your-backend>.onrender.com`, no trailing `/api`).
+3. Deploy. REST calls and the `/ws` live stream both go to `VITE_API_URL`.
+
 ## Running tests
 
 ```bash

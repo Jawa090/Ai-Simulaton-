@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useRef, useState, ReactNode } from "react";
+import { webSocketUrl } from "../config";
 
 export interface SimEvent {
   eventId: string;
@@ -56,8 +57,7 @@ export function SimulationSocketProvider({ children }: { children: ReactNode }) 
 
     function connect() {
       if (cancelled) return;
-      const protocol = window.location.protocol === "https:" ? "wss" : "ws";
-      const ws = new WebSocket(`${protocol}://${window.location.host}/ws`);
+      const ws = new WebSocket(webSocketUrl());
       wsRef.current = ws;
 
       ws.onopen = () => setConnected(true);
