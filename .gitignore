@@ -5,6 +5,10 @@ build/
 *.log
 .env
 .env.local
-packages/server/prisma/dev.db
-packages/server/prisma/dev.db-journal
+backend/prisma/*.db
+backend/prisma/*.db-journal
+*.db
+*.db-journal
 .DS_Store
+.claude/
+

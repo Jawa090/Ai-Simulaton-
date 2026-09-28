@@ -4,17 +4,20 @@
   "version": "0.1.0",
   "description": "EIGHTH AVITRONICS - conceptual radar/avionics monitoring SIMULATION platform (Phase-1 prototype, not for operational use)",
   "workspaces": [
-    "packages/shared",
-    "packages/server",
-    "packages/web"
+    "shared",
+    "backend",
+    "frontend"
   ],
   "scripts": {
-    "dev:server": "npm run dev --workspace=packages/server",
-    "dev:web": "npm run dev --workspace=packages/web",
-    "build": "npm run build --workspace=packages/shared && npm run build --workspace=packages/server && npm run build --workspace=packages/web",
-    "test": "npm run test --workspace=packages/server",
-    "db:migrate": "npm run db:migrate --workspace=packages/server",
-    "db:seed": "npm run db:seed --workspace=packages/server"
+    "dev:backend": "npm run dev --workspace=backend",
+    "dev:frontend": "npm run dev --workspace=frontend",
+    "dev:server": "npm run dev --workspace=backend",
+    "dev:web": "npm run dev --workspace=frontend",
+    "build": "npm run build --workspace=shared && npm run build --workspace=backend && npm run build --workspace=frontend",
+    "test": "npm run test --workspace=backend",
+    "db:migrate": "npm run db:migrate --workspace=backend",
+    "db:push": "npm run db:push --workspace=backend",
+    "db:seed": "npm run db:seed --workspace=backend"
   },
   "engines": {
     "node": ">=18"

@@ -28,14 +28,15 @@ that:
 ## Architecture at a glance
 
 ```
-packages/
-  shared/   Shared TypeScript types, enums, and SIMULATION PARAMETER defaults
-  server/   Express API + simulation engine + Prisma/SQLite + WebSocket
-  web/      React + Vite dashboard (dark technical monitoring UI)
+Simulation/
+  docs/      System architecture and simulation model documentation
+  shared/    Shared TypeScript types, enums, and SIMULATION PARAMETER defaults
+  backend/   Express API + simulation engine + Prisma/SQLite + WebSocket
+  frontend/  React + Vite dashboard (dark technical monitoring UI)
 ```
 
-See [ARCHITECTURE.md](./ARCHITECTURE.md) for the module breakdown and
-[SIMULATION_MODEL.md](./SIMULATION_MODEL.md) for the signal/field/estimation model
+See [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) for the module breakdown and
+[docs/SIMULATION_MODEL.md](./docs/SIMULATION_MODEL.md) for the signal/field/estimation model
 and every value marked `ENGINEERING VALIDATION REQUIRED`.
 
 ## Requirements
@@ -45,7 +46,7 @@ and every value marked `ENGINEERING VALIDATION REQUIRED`.
 
 No external database server is required — the prototype uses a file-based SQLite
 database via Prisma so it runs with zero infrastructure setup. The datasource can be
-swapped to Postgres/MySQL later by changing `packages/server/prisma/schema.prisma`
+swapped to Postgres/MySQL later by changing `backend/prisma/schema.prisma`
 and `DATABASE_URL`.
 
 ## Setup
@@ -55,22 +56,22 @@ and `DATABASE_URL`.
 npm install
 
 # configure the server environment (defaults are fine for local use)
-cp packages/server/.env.example packages/server/.env
+cp backend/.env.example backend/.env
 
 # create the SQLite schema and seed UNIT-01 (18 antennas, 6 directions,
 # 18 signals, object profiles, demo users)
-npm run db:push --workspace=packages/server
-npm run db:seed --workspace=packages/server
+npm run db:push
+npm run db:seed
 ```
 
 ## Running
 
 ```bash
 # terminal 1 — API + simulation engine + WebSocket, http://localhost:4000
-npm run dev:server
+npm run dev:backend
 
 # terminal 2 — dashboard, http://localhost:5173 (proxies /api and /ws to :4000)
-npm run dev:web
+npm run dev:frontend
 ```
 
 Open http://localhost:5173 and sign in with one of the seeded demo accounts:
@@ -98,7 +99,7 @@ multiplier (0.5×–10×), and SPAWN OBJECT to introduce your own object type.
 ## Running tests
 
 ```bash
-npm run test --workspace=packages/server
+npm test
 ```
 
 This runs:

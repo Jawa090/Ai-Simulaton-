@@ -88,7 +88,7 @@ async function main() {
 
   // --- 18 directional antennas: 3 per direction, one per Layer 2/3/4 -------
   // DEFAULT/PLACEHOLDER mapping — ENGINEERING VALIDATION REQUIRED (see
-  // packages/shared/src/config.ts DEFAULT_ANTENNA_LAYER_ORDER).
+  // shared/src/config.ts DEFAULT_ANTENNA_LAYER_ORDER).
   let antennaCounter = 1;
   const freqSpan = SIGNAL_FREQUENCY_RANGE_HZ.max - SIGNAL_FREQUENCY_RANGE_HZ.min;
   let signalIndex = 0;

@@ -2,7 +2,7 @@ import { execSync } from "child_process";
 import path from "path";
 import fs from "fs";
 
-const TEST_DATABASE_URL = "file:./prisma/test.db";
+const TEST_DATABASE_URL = "file:./test.db";
 const root = path.resolve(__dirname, "..");
 const dbFile = path.join(root, "prisma", "test.db");
 

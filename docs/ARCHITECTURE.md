@@ -11,7 +11,7 @@ signal/field/estimation model specifically, see [SIMULATION_MODEL.md](./SIMULATI
 ```
                          ┌────────────────────────────┐
                          │        React Dashboard      │
-                         │  (packages/web)              │
+                         │  (frontend)                  │
                          │  REST (polling, low freq)    │
                          │  WebSocket (live events/tick)│
                          └───────────────┬──────────────┘
