@@ -15,7 +15,7 @@ export function notFoundHandler(req: Request, res: Response) {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export function errorHandler(err: unknown, req: Request, res: Response, next: NextFunction) {
+export function errorHandler(err: unknown, req: Request, res: Response, _next: NextFunction) {
   if (err instanceof ZodError) {
     return res.status(400).json({ error: "Validation failed", details: err.flatten() });
   }

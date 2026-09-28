@@ -10,7 +10,7 @@ export const objectsRouter = Router();
 
 objectsRouter.get(
   "/",
-  asyncHandler(async (req, res) => {
+  asyncHandler(async (_req, res) => {
     const objects = await prisma.simObject.findMany({ orderBy: { spawnedAt: "desc" }, take: 200 });
     res.json(objects);
   })

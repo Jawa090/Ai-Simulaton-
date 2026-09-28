@@ -1,14 +1,25 @@
+# Dependencies
 node_modules/
+
+# Build output
 dist/
 build/
 *.tsbuildinfo
-*.log
+
+# Environment
 .env
 .env.local
-backend/prisma/*.db
-backend/prisma/*.db-journal
+
+# SQLite databases (dev + test)
 *.db
 *.db-journal
-.DS_Store
-.claude/
 
+# Logs
+*.log
+
+# Editor / OS / tooling
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+.claude/

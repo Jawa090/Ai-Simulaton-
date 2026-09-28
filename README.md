@@ -4,7 +4,7 @@
 > ground-based monitoring/detection/tracking architecture. It does **not** control
 > real radar hardware, RF transmitters, antennas, or any weapon/interception system.
 > Every signal, echo, detection, and estimated position in this system is generated
-> in software for demonstration purposes. See [SIMULATION_MODEL.md](./SIMULATION_MODEL.md)
+> in software for demonstration purposes. See [docs/SIMULATION_MODEL.md](./docs/SIMULATION_MODEL.md)
 > and section 42 of the original project brief for the full limitations statement.
 
 ## What this is
@@ -25,14 +25,40 @@ that:
    never takes or recommends a real-world action automatically.
 7. Streams every step of this lifecycle to a live dashboard over WebSocket.
 
-## Architecture at a glance
+## Project structure
 
 ```
-Simulation/
-  docs/      System architecture and simulation model documentation
-  shared/    Shared TypeScript types, enums, and SIMULATION PARAMETER defaults
-  backend/   Express API + simulation engine + Prisma/SQLite + WebSocket
-  frontend/  React + Vite dashboard (dark technical monitoring UI)
+.
+├── backend/                 Express API + simulation engine + WebSocket  (:4000)
+│   ├── prisma/              Database schema (SQLite via Prisma)
+│   ├── src/
+│   │   ├── api/             REST routes, one file per resource
+│   │   ├── auth/            JWT + role-based access middleware
+│   │   ├── config/          Environment variables
+│   │   ├── db/              Prisma client + seed script
+│   │   ├── engine/          Simulation engines (motion, field, interaction, estimation, alerts)
+│   │   ├── events/          EventBus — persists and broadcasts lifecycle events
+│   │   ├── logging/         Structured logger
+│   │   ├── middleware/      Error handling
+│   │   ├── ws/              WebSocket server (/ws)
+│   │   └── index.ts         Entry point
+│   └── tests/               Vitest unit + end-to-end tests
+│
+├── frontend/                React + Vite dashboard  (:5173)
+│   └── src/
+│       ├── api/             HTTP client + response types
+│       ├── auth/            Login state
+│       ├── components/      Reusable UI panels
+│       ├── hooks/           Shared React hooks
+│       ├── pages/           One file per screen
+│       ├── styles/          Theme CSS
+│       ├── ws/              Live WebSocket connection
+│       └── config.ts        Backend URL (VITE_API_URL)
+│
+├── shared/                  Types, enums and simulation defaults used by both sides
+├── docs/                    Architecture + simulation model
+├── render.yaml              Backend deployment (Render)
+└── vercel.json              Frontend deployment (Vercel)
 ```
 
 See [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) for the module breakdown and

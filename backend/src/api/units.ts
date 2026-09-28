@@ -6,7 +6,7 @@ export const unitsRouter = Router();
 
 unitsRouter.get(
   "/",
-  asyncHandler(async (req, res) => {
+  asyncHandler(async (_req, res) => {
     const units = await prisma.unit.findMany({ orderBy: { code: "asc" } });
     const result = await Promise.all(
       units.map(async (u) => {
