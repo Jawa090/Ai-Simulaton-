@@ -1,6 +1,6 @@
 import { defineConfig } from "vitest/config";
 
-const TEST_DATABASE_URL = "file:./prisma/test.db";
+const TEST_DATABASE_URL = "file:./test.db";
 
 export default defineConfig({
   test: {
