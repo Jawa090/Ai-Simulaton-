@@ -32,7 +32,7 @@ async function main() {
     const passwordHash = await hashPassword(u.password);
     await prisma.user.upsert({
       where: { email: u.email },
-      update: {},
+      update: { displayName: u.displayName, role: u.role, passwordHash },
       create: { email: u.email, displayName: u.displayName, role: u.role, passwordHash },
     });
   }
@@ -42,7 +42,7 @@ async function main() {
   for (const l of LAYER_DEFS) {
     const layer = await prisma.layer.upsert({
       where: { code: l.code },
-      update: {},
+      update: { name: l.name, sortOrder: l.sortOrder, description: l.description },
       create: { code: l.code, name: l.name, sortOrder: l.sortOrder, description: l.description },
     });
     layerByCode.set(l.code, layer.id);
@@ -51,7 +51,7 @@ async function main() {
   // --- Unit ----------------------------------------------------------------
   const unit = await prisma.unit.upsert({
     where: { code: "UNIT-01" },
-    update: {},
+    update: { name: "Ground Monitoring Unit 01" },
     create: { code: "UNIT-01", name: "Ground Monitoring Unit 01", status: "OFFLINE" },
   });
 
@@ -61,7 +61,11 @@ async function main() {
     const azimuthCenterDeg = i * (360 / DIRECTION_CODES.length);
     const direction = await prisma.direction.upsert({
       where: { unitId_code: { unitId: unit.id, code: DIRECTION_CODES[i] } },
-      update: {},
+      update: {
+        azimuthCenterDeg,
+        sectorWidthDeg: DEFAULT_FIELD_GEOMETRY.sectorWidthDeg,
+        rangeUnits: DEFAULT_FIELD_GEOMETRY.rangeUnits,
+      },
       create: {
         unitId: unit.id,
         code: DIRECTION_CODES[i],
@@ -74,9 +78,12 @@ async function main() {
   }
 
   // --- Omni transmitter (Layer 1, not one of the 18) ------------------------
-  const omniAntenna = await prisma.antenna.upsert({
+  await prisma.antenna.upsert({
     where: { unitId_code: { unitId: unit.id, code: "ANT-OMNI" } },
-    update: {},
+    update: {
+      layerId: layerByCode.get(LayerCode.LAYER_1_OMNI)!,
+      isOmni: true,
+    },
     create: {
       unitId: unit.id,
       code: "ANT-OMNI",
@@ -100,7 +107,11 @@ async function main() {
       antennaCounter++;
       const antenna = await prisma.antenna.upsert({
         where: { unitId_code: { unitId: unit.id, code } },
-        update: {},
+        update: {
+          directionId: direction.id,
+          layerId: layerByCode.get(layerCode)!,
+          isOmni: false,
+        },
         create: {
           unitId: unit.id,
           code,
@@ -115,7 +126,17 @@ async function main() {
       signalIndex++;
 
       const existingSignal = await prisma.signal.findFirst({ where: { antennaId: antenna.id } });
-      if (!existingSignal) {
+      if (existingSignal) {
+        await prisma.signal.update({
+          where: { id: existingSignal.id },
+          data: {
+            unitId: unit.id,
+            directionId: direction.id,
+            layerId: layerByCode.get(layerCode)!,
+            frequencyHz: Math.round(frequencyHz * 100) / 100,
+          },
+        });
+      } else {
         await prisma.signal.create({
           data: {
             unitId: unit.id,
@@ -135,7 +156,13 @@ async function main() {
   for (const profile of Object.values(OBJECT_PROFILE_DEFAULTS)) {
     await prisma.objectProfile.upsert({
       where: { type: profile.type },
-      update: {},
+      update: {
+        label: profile.label,
+        minAltitudeUnits: profile.minAltitudeUnits,
+        maxAltitudeUnits: profile.maxAltitudeUnits,
+        defaultSpeedUnitsPerSec: profile.defaultSpeedUnitsPerSec,
+        note: profile.note,
+      },
       create: {
         type: profile.type,
         label: profile.label,
@@ -150,7 +177,10 @@ async function main() {
   // --- Simulation parameters (editable defaults) ----------------------------
   await prisma.simulationParameter.upsert({
     where: { key: "field_geometry" },
-    update: {},
+    update: {
+      value: JSON.stringify(DEFAULT_FIELD_GEOMETRY),
+      description: "Directional field sector width, range, and per-layer altitude bands. SIMULATION PARAMETER.",
+    },
     create: {
       key: "field_geometry",
       value: JSON.stringify(DEFAULT_FIELD_GEOMETRY),
